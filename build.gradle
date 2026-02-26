@@ -13,6 +13,8 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.13'
 }
 
 apply plugin: 'org.spongepowered.mixin'
@@ -26,6 +28,34 @@ base {
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(17)
+}
+
+application {
+    mainClass = 'cc.sighs.more_maid_interaction.core.sim.FxSimulator'
+}
+
+tasks.named('run', JavaExec).configure {
+    standardInput = System.in
+    systemProperty 'file.encoding', 'UTF-8'
+}
+
+tasks.register('runAuto', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'cc.sighs.more_maid_interaction.core.sim.ConsoleSimulator'
+    args '--auto', '5000'
+    systemProperty 'file.encoding', 'UTF-8'
+}
+
+tasks.register('runScenario', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'cc.sighs.more_maid_interaction.core.sim.ConsoleSimulator'
+    args '--scenario'
+    systemProperty 'file.encoding', 'UTF-8'
+}
+
+javafx {
+    version = '17.0.2'
+    modules = [ 'javafx.controls', 'javafx.graphics' ]
 }
 
 minecraft {
@@ -131,14 +161,15 @@ mixin {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
-    // Put repositories for dependencies here
-    // ForgeGradle automatically adds the Forge maven and Maven Central for you
-
-    // If you have mod jar dependencies in ./libs, you can declare them as a repository like so.
-    // See https://docs.gradle.org/current/userguide/declaring_repositories.html#sub:flat_dir_resolver
-    // flatDir {
-    //     dir 'libs'
-    // }
+    mavenCentral()
+    maven {
+        // Add curse maven to repositories
+        name = "Curse Maven"
+        url = "https://www.cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
 }
 
 dependencies {
@@ -149,23 +180,11 @@ dependencies {
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
-    // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
-    // compileOnly fg.deobf("mezz.jei:jei-${mc_version}-common-api:${jei_version}")
-    // compileOnly fg.deobf("mezz.jei:jei-${mc_version}-forge-api:${jei_version}")
-    // runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}-forge:${jei_version}")
-
-    // Example mod dependency using a mod jar from ./libs with a flat dir repository
-    // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
-    // The group id is ignored when searching -- in this case, it is "blank"
-    // implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
-
-    // For more info:
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
+    implementation fg.deobf("curse.maven:touhou-little-maid-355044:7510714")
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
@@ -204,4 +223,8 @@ tasks.named('jar', Jar).configure {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
 }

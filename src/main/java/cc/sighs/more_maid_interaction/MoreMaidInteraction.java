@@ -8,5 +8,6 @@ import org.slf4j.Logger;
 public class MoreMaidInteraction {
     public static final String MODID = "more_maid_interaction";
     public static final Logger LOGGER = LogUtils.getLogger();
-
+    public MoreMaidInteraction() {
+    }
 }
