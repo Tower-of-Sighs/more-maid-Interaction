@@ -1,8 +1,10 @@
 package cc.sighs.more_maid_interaction.core;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -55,6 +57,56 @@ public final class InteractionEngine {
         double teaseAxis = event.stimulus().get(StimulusAxis.TEASE_INTENSITY);
         mood.update(e, varianceAvg, spam, jealous, teaseAxis, stats.novelty());
         return new Result(before, stats, s, e);
+    }
+
+    public Result applyScriptDelta(Stats delta) {
+        Objects.requireNonNull(delta);
+        return applyScriptDelta(delta.favor(), delta.bond(), delta.sincerity(), delta.novelty(), SocialContext.empty(), Map.of());
+    }
+
+    public Result applyScriptDelta(Stats delta, SocialContext ctx, Map<MoodModel.Mood, Double> moodBias) {
+        Objects.requireNonNull(delta);
+        return applyScriptDelta(delta.favor(), delta.bond(), delta.sincerity(), delta.novelty(), ctx, moodBias);
+    }
+
+    public Result applyScriptDelta(double favorDelta, double bondDelta, double sincerityDelta, double noveltyDelta) {
+        return applyScriptDelta(favorDelta, bondDelta, sincerityDelta, noveltyDelta, SocialContext.empty(), Map.of());
+    }
+
+    public Result applyScriptDelta(
+            double favorDelta,
+            double bondDelta,
+            double sincerityDelta,
+            double noveltyDelta,
+            SocialContext ctx,
+            Map<MoodModel.Mood, Double> moodBias
+    ) {
+        Objects.requireNonNull(ctx);
+        Objects.requireNonNull(moodBias);
+        Stats before = stats;
+        stats = new Stats(
+                Stats.clamp(stats.favor() + favorDelta),
+                Stats.clamp(stats.bond() + bondDelta),
+                Stats.clamp(stats.sincerity() + sincerityDelta),
+                Stats.clamp(stats.novelty() + noveltyDelta)
+        );
+        ticks++;
+        EmotionState e = emotion(stats);
+        mood.update(e, 0, 0, jealousyIndex(ctx), 0, stats.novelty());
+        mood.applyLogitBias(moodBias);
+        return new Result(before, stats, 0, e);
+    }
+
+    public EngineSnapshot snapshot() {
+        return snapshot(stats);
+    }
+
+    public EngineSnapshot snapshot(Stats state) {
+        Stats safeState = state == null ? stats : state;
+        EmotionState e = emotion(safeState);
+        Map<MoodModel.Mood, Double> dist = new EnumMap<>(MoodModel.Mood.class);
+        dist.putAll(mood.distribution());
+        return new EngineSnapshot(safeState, e, mood.topMood(), dist, ticks);
     }
 
     private void adjustSincerity(InteractionEvent e) {

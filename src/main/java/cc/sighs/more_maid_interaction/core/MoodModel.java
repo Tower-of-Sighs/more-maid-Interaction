@@ -48,6 +48,26 @@ public final class MoodModel {
         return best;
     }
 
+    public void applyLogitBias(Map<Mood, Double> bias) {
+        if (bias == null || bias.isEmpty()) {
+            return;
+        }
+        double[] logits = new double[Mood.values().length];
+        int i = 0;
+        for (Mood mood : Mood.values()) {
+            double p = Math.max(1e-9, dist.getOrDefault(mood, 0.0));
+            double b = bias.getOrDefault(mood, 0.0);
+            logits[i++] = Math.log(p) + b;
+        }
+
+        double[] soft = softmax(logits);
+        i = 0;
+        for (Mood mood : Mood.values()) {
+            dist.put(mood, clamp01(soft[i++]));
+        }
+        normalize();
+    }
+
     private void normalize() {
         double sum = 0;
         for (double v : dist.values()) sum += v;
