@@ -1,0 +1,51 @@
+{
+  "key.categories.more_maid_interaction": "More Maid Interaction",
+  "key.more_maid_interaction.open_interaction": "Open Maid Interaction Panel",
+
+  "ui.more_maid_interaction.title": "Maid Interaction",
+  "ui.more_maid_interaction.tip": "Click an event first. Gift mode: right-click to stage items, then click execute.",
+  "ui.more_maid_interaction.preview_default_title": "Select Interaction",
+  "ui.more_maid_interaction.preview_default_detail": "Click an event card to open details and actions.",
+  "ui.more_maid_interaction.event_list": "Event List",
+  "ui.more_maid_interaction.event_execute": "Execute Event",
+
+  "ui.more_maid_interaction.gift_panel_title": "Gift Panel",
+  "ui.more_maid_interaction.gift_drop_tip": "Hold an item and right-click drop zone. Shift+right-click adds full stack.",
+  "ui.more_maid_interaction.gift_drop_zone": "Right-click to add mainhand item",
+  "ui.more_maid_interaction.gift_empty": "No gifts staged",
+  "ui.more_maid_interaction.gift_counter": "Count %s / Types %s (Cap %s / %s)",
+  "ui.more_maid_interaction.gift_clear": "Clear",
+  "ui.more_maid_interaction.gift_execute": "Execute Gift",
+
+  "event.more_maid_interaction.knee_pillow": "Knee Pillow",
+  "event.more_maid_interaction.gift": "Give Gift",
+  "event.more_maid_interaction.headpat": "Headpat",
+  "event.more_maid_interaction.feed": "Feed",
+
+  "event_detail.more_maid_interaction.knee_pillow": "Intimate comfort event. Deeper emotion curves and branches will be connected next.",
+  "event_detail.more_maid_interaction.gift": "Gift event: stage items by right-clicking, then execute. Payload fields are passed to Maidscript.",
+  "event_detail.more_maid_interaction.headpat": "Light positive feedback event for daily routines and relation stability.",
+  "event_detail.more_maid_interaction.feed": "Care event. Future versions will link hunger, time, and preference memory.",
+
+  "message.more_maid_interaction.aim_maid": "Aim at a maid first.",
+  "message.more_maid_interaction.panel_closed": "Interaction panel closed.",
+  "message.more_maid_interaction.opened": "Interaction panel opened.",
+  "message.more_maid_interaction.ui_missing": "Failed to load interaction panel resource. Check AUI resource path.",
+  "message.more_maid_interaction.interaction_selected": "Selected event: %s",
+  "message.more_maid_interaction.event_sent": "Triggered %s -> %s (shell stage)",
+  "message.more_maid_interaction.too_far": "Too far from maid, event rejected.",
+  "message.more_maid_interaction.not_owner": "This maid is not yours.",
+
+  "message.more_maid_interaction.gift_no_item": "Your main hand has no valid item.",
+  "message.more_maid_interaction.gift_added": "Added gift: %s x%s",
+  "message.more_maid_interaction.gift_cleared": "Gift list cleared.",
+  "message.more_maid_interaction.gift_empty": "Gift list is empty.",
+  "message.more_maid_interaction.gift_execute_sent": "Gift request sent.",
+  "message.more_maid_interaction.gift_execute_ok": "Delivered %s items to %s.",
+  "message.more_maid_interaction.gift_execute_failed": "Gift failed: no deliverable items or maid inventory is full.",
+  "message.more_maid_interaction.gift_total_limit": "Gift total count reached the limit.",
+  "message.more_maid_interaction.gift_distinct_limit": "Gift type count reached the limit.",
+  "message.more_maid_interaction.gift_not_enough": "Not enough matching items in inventory for staging.",
+  "message.more_maid_interaction.select_event_first": "Select an event first.",
+  "message.more_maid_interaction.maid_line": "%s: %s"
+}

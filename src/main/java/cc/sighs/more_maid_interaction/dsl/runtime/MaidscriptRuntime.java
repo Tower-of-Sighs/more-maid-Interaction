@@ -54,10 +54,6 @@ public final class MaidscriptRuntime {
         return result;
     }
 
-    @FunctionalInterface
-    private interface Callable {
-        Object call(List<Object> args);
-    }
 
     private final class ExecutionContext {
         private final RuntimeInput input;
@@ -78,91 +74,100 @@ public final class MaidscriptRuntime {
             Map<String, Object> event = new HashMap<>();
             event.put("id", input.event().id());
             event.put("intensity", input.event().intensity());
-            event.put("payload", new HashMap<>(input.event().payload()));
+            Map<String, Object> payload = new HashMap<>(input.event().payload());
+            event.put("payload", payload);
+
 
             Map<String, Object> mood = new HashMap<>();
             mood.put("top", input.moodTop());
-            mood.put("prob", (Callable) args -> {
+            mood.put("prob", (RuntimeCallable) args -> {
                 requireArity("mood.prob", args, 1);
                 String name = asString(args.get(0));
                 return input.moodDistribution().getOrDefault(name, 0.0);
             });
 
             Map<String, Object> memory = new HashMap<>();
-            memory.put("count", (Callable) args -> {
+            memory.put("count", (RuntimeCallable) args -> {
                 requireArity("memory.count", args, 2);
                 return input.services().memoryCount(asString(args.get(0)), asInt(args.get(1)));
             });
-            memory.put("frequency", (Callable) args -> {
+            memory.put("frequency", (RuntimeCallable) args -> {
                 requireArity("memory.frequency", args, 1);
                 return input.services().memoryFrequency(asString(args.get(0)));
             });
-            memory.put("has_recent", (Callable) args -> {
+            memory.put("has_recent", (RuntimeCallable) args -> {
                 requireArity("memory.has_recent", args, 2);
                 return input.services().memoryHasRecent(asString(args.get(0)), asInt(args.get(1)));
             });
-            memory.put("add", (Callable) args -> {
+            memory.put("add", (RuntimeCallable) args -> {
                 requireArity("memory.add", args, 1);
                 result.addMemoryTag(asString(args.get(0)));
                 return null;
             });
 
             Map<String, Object> story = new HashMap<>();
-            story.put("has_flag", (Callable) args -> {
+            story.put("has_flag", (RuntimeCallable) args -> {
                 requireArity("story.has_flag", args, 1);
                 return input.services().storyHasFlag(asString(args.get(0)));
             });
-            story.put("set_flag", (Callable) args -> {
+            story.put("set_flag", (RuntimeCallable) args -> {
                 requireArity("story.set_flag", args, 1);
                 result.addStoryFlag(asString(args.get(0)));
                 return null;
             });
 
+            Map<String, Object> contextMap = new HashMap<>(input.context());
+
             globals.put("state", new HashMap<>(input.state()));
             globals.put("emotion", new HashMap<>(input.emotion()));
             globals.put("social", new HashMap<>(input.social()));
-            globals.put("context", new HashMap<>(input.context()));
+            globals.put("context", contextMap);
             globals.put("event", event);
             globals.put("mood", mood);
             globals.put("memory", memory);
             globals.put("story", story);
 
-            globals.put("clamp", (Callable) args -> {
+            // External adapters can export context entries as top-level bindings.
+            for (Map.Entry<String, Object> entry : contextMap.entrySet()) {
+                globals.putIfAbsent(entry.getKey(), entry.getValue());
+            }
+
+            globals.put("clamp", (RuntimeCallable) args -> {
                 requireArity("clamp", args, 3);
                 return clamp(asNumber(args.get(0)), asNumber(args.get(1)), asNumber(args.get(2)));
             });
-            globals.put("lerp", (Callable) args -> {
+            globals.put("lerp", (RuntimeCallable) args -> {
                 requireArity("lerp", args, 3);
                 double a = asNumber(args.get(0));
                 double b = asNumber(args.get(1));
                 double t = asNumber(args.get(2));
                 return a + (b - a) * t;
             });
-            globals.put("smoothstep", (Callable) args -> {
+            globals.put("smoothstep", (RuntimeCallable) args -> {
                 requireArity("smoothstep", args, 1);
                 double x = clamp(asNumber(args.get(0)), 0, 1);
                 return x * x * (3 - 2 * x);
             });
-            globals.put("rand", (Callable) args -> {
+            globals.put("rand", (RuntimeCallable) args -> {
                 requireArity("rand", args, 0);
                 return input.services().random();
             });
-            globals.put("rand_range", (Callable) args -> {
+            globals.put("rand_range", (RuntimeCallable) args -> {
                 requireArity("rand_range", args, 2);
                 double min = asNumber(args.get(0));
                 double max = asNumber(args.get(1));
                 return min + (max - min) * input.services().random();
             });
-            globals.put("contains", (Callable) args -> {
+            globals.put("contains", (RuntimeCallable) args -> {
                 requireArity("contains", args, 2);
                 return asString(args.get(0)).contains(asString(args.get(1)));
             });
-            globals.put("cooldown_ready", (Callable) args -> {
+            globals.put("cooldown_ready", (RuntimeCallable) args -> {
                 requireArity("cooldown_ready", args, 2);
                 return input.services().cooldownReady(asString(args.get(0)), asInt(args.get(1)));
             });
 
-            globals.put("apply_delta", (Callable) args -> {
+            globals.put("apply_delta", (RuntimeCallable) args -> {
                 requireArity("apply_delta", args, 1);
                 Map<String, Object> map = asMap(args.get(0));
                 for (Map.Entry<String, Object> e : map.entrySet()) {
@@ -170,7 +175,7 @@ public final class MaidscriptRuntime {
                 }
                 return null;
             });
-            globals.put("mood_bias", (Callable) args -> {
+            globals.put("mood_bias", (RuntimeCallable) args -> {
                 requireArity("mood_bias", args, 1);
                 Map<String, Object> map = asMap(args.get(0));
                 for (Map.Entry<String, Object> e : map.entrySet()) {
@@ -178,17 +183,17 @@ public final class MaidscriptRuntime {
                 }
                 return null;
             });
-            globals.put("say", (Callable) args -> {
+            globals.put("say", (RuntimeCallable) args -> {
                 requireArity("say", args, 1);
                 result.addAction("say", Map.of("text", asString(args.get(0))));
                 return null;
             });
-            globals.put("bubble", (Callable) args -> {
+            globals.put("bubble", (RuntimeCallable) args -> {
                 requireArity("bubble", args, 1);
                 result.addAction("bubble", Map.of("text", asString(args.get(0))));
                 return null;
             });
-            globals.put("sound_hint", (Callable) args -> {
+            globals.put("sound_hint", (RuntimeCallable) args -> {
                 if (args.isEmpty()) {
                     throw new ScriptRuntimeException("sound_hint requires at least 1 argument.");
                 }
@@ -198,14 +203,14 @@ public final class MaidscriptRuntime {
                 result.addAction("sound_hint", Map.of("id", id, "volume", volume, "pitch", pitch));
                 return null;
             });
-            globals.put("animation_hint", (Callable) args -> {
+            globals.put("animation_hint", (RuntimeCallable) args -> {
                 requireArity("animation_hint", args, 1);
                 result.addAction("animation_hint", Map.of("id", asString(args.get(0))));
                 return null;
             });
 
             for (FunctionDecl fn : functions.values()) {
-                globals.put(fn.name(), (Callable) args -> invokeFunction(fn, args));
+                globals.put(fn.name(), (RuntimeCallable) args -> invokeFunction(fn, args));
             }
         }
 
@@ -247,6 +252,11 @@ public final class MaidscriptRuntime {
             if (stmt instanceof LetStmt letStmt) {
                 Object value = eval(letStmt.initializer());
                 scopes.peek().put(letStmt.name(), value);
+                return;
+            }
+            if (stmt instanceof AssignStmt assignStmt) {
+                Object value = eval(assignStmt.value());
+                assign(assignStmt.name(), value);
                 return;
             }
             if (stmt instanceof IfStmt ifStmt) {
@@ -308,7 +318,7 @@ public final class MaidscriptRuntime {
             }
             if (expr instanceof CallExpr callExpr) {
                 Object callee = eval(callExpr.callee());
-                if (!(callee instanceof Callable callable)) {
+                if (!(callee instanceof RuntimeCallable callable)) {
                     throw new ScriptRuntimeException("Callee is not callable.");
                 }
                 List<Object> args = new ArrayList<>();
@@ -375,6 +385,16 @@ public final class MaidscriptRuntime {
             throw new ScriptRuntimeException("Undefined identifier: " + name);
         }
 
+        private void assign(String name, Object value) {
+            for (Map<String, Object> scope : scopes) {
+                if (scope.containsKey(name)) {
+                    scope.put(name, value);
+                    return;
+                }
+            }
+            throw new ScriptRuntimeException("Assign to undefined identifier: " + name);
+        }
+
         private void step() {
             steps++;
             if (steps > input.maxSteps()) {
@@ -417,7 +437,6 @@ public final class MaidscriptRuntime {
         return value == null ? "null" : String.valueOf(value);
     }
 
-    @SuppressWarnings("unchecked")
     private static Map<String, Object> asMap(Object value) {
         if (value instanceof Map<?, ?> map) {
             Map<String, Object> result = new LinkedHashMap<>();
@@ -428,6 +447,7 @@ public final class MaidscriptRuntime {
         }
         throw new ScriptRuntimeException("Expected map object, got: " + value);
     }
+
 
     private static void requireArity(String fn, List<Object> args, int expect) {
         if (args.size() != expect) {

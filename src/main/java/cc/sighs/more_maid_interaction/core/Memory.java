@@ -1,120 +1,153 @@
 package cc.sighs.more_maid_interaction.core;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Queue;
 
 final class Memory {
-    private final int window;
-    private final Queue<InteractionEvent> recent;
-    private final Map<EventTag, Integer> cooldowns;
-    private final EnumMap<StimulusAxis, Double> mean;
-    private final EnumMap<StimulusAxis, Double> mean2;
     private static final double ALPHA = 0.2;
+    private static final StimulusAxis[] AXES = StimulusAxis.values();
+    private static final double DISTANCE_NORM = Math.sqrt(AXES.length);
+
+    private final int window;
+    private final ArrayDeque<InteractionEvent> recent;
+    private final int[] cooldownByTag;
+    private final int[] tagCount;
+    private final double[] mean;
+    private final double[] mean2;
+    private int totalTagHits;
 
     Memory(int window) {
         this.window = Math.max(1, window);
         this.recent = new ArrayDeque<>(this.window);
-        this.cooldowns = new EnumMap<>(EventTag.class);
-        this.mean = new EnumMap<>(StimulusAxis.class);
-        this.mean2 = new EnumMap<>(StimulusAxis.class);
-        for (StimulusAxis a : StimulusAxis.values()) {
-            mean.put(a, 0.0);
-            mean2.put(a, 0.0);
-        }
+        this.cooldownByTag = new int[EventTag.values().length];
+        this.tagCount = new int[EventTag.values().length];
+        this.mean = new double[AXES.length];
+        this.mean2 = new double[AXES.length];
+        this.totalTagHits = 0;
     }
 
     void tick() {
-        for (Map.Entry<EventTag, Integer> e : new ArrayList<>(cooldowns.entrySet())) {
-            int v = e.getValue() == null ? 0 : e.getValue();
-            if (v <= 0) {
-                cooldowns.remove(e.getKey());
-            } else {
-                cooldowns.put(e.getKey(), v - 1);
+        for (int i = 0; i < cooldownByTag.length; i++) {
+            if (cooldownByTag[i] > 0) {
+                cooldownByTag[i]--;
             }
         }
     }
 
     void push(InteractionEvent e) {
-        if (recent.size() >= window) recent.poll();
-        recent.offer(e);
-        for (EventTag t : e.tags()) {
-            if (e.cooldown() > 0) {
-                cooldowns.put(t, Math.max(cooldowns.getOrDefault(t, 0), e.cooldown()));
+        if (recent.size() >= window) {
+            InteractionEvent old = recent.poll();
+            if (old != null) {
+                removeTagCounts(old);
             }
         }
+
+        recent.offer(e);
+        addTagCounts(e);
+
         Stimulus s = e.stimulus();
-        for (StimulusAxis a : StimulusAxis.values()) {
-            double x = s.get(a);
-            double m = mean.getOrDefault(a, 0.0);
-            double m2 = mean2.getOrDefault(a, 0.0);
-            double nm = (1 - ALPHA) * m + ALPHA * x;
-            double nm2 = (1 - ALPHA) * m2 + ALPHA * x * x;
-            mean.put(a, nm);
-            mean2.put(a, nm2);
+        for (int i = 0; i < AXES.length; i++) {
+            double x = s.get(AXES[i]);
+            double m = mean[i];
+            double m2 = mean2[i];
+            mean[i] = (1 - ALPHA) * m + ALPHA * x;
+            mean2[i] = (1 - ALPHA) * m2 + ALPHA * x * x;
+        }
+    }
+
+    private void addTagCounts(InteractionEvent e) {
+        int cooldown = e.cooldown();
+        for (EventTag t : e.tags()) {
+            int idx = t.ordinal();
+            if (cooldown > 0 && cooldown > cooldownByTag[idx]) {
+                cooldownByTag[idx] = cooldown;
+            }
+            tagCount[idx]++;
+            totalTagHits++;
+        }
+    }
+
+    private void removeTagCounts(InteractionEvent e) {
+        for (EventTag t : e.tags()) {
+            int idx = t.ordinal();
+            if (tagCount[idx] > 0) {
+                tagCount[idx]--;
+                totalTagHits--;
+            }
+        }
+        if (totalTagHits < 0) {
+            totalTagHits = 0;
         }
     }
 
     double frequency(EventTag tag) {
-        if (recent.isEmpty()) return 0;
-        int c = 0;
-        for (InteractionEvent e : recent) if (e.tags().contains(tag)) c++;
-        return (double) c / (double) recent.size();
+        if (recent.isEmpty()) {
+            return 0;
+        }
+        return (double) tagCount[tag.ordinal()] / (double) recent.size();
     }
 
     double diversity() {
-        if (recent.isEmpty()) return 0;
-        Map<EventTag, Integer> count = new EnumMap<>(EventTag.class);
-        for (InteractionEvent e : recent) {
-            for (EventTag t : e.tags()) count.put(t, count.getOrDefault(t, 0) + 1);
+        if (totalTagHits <= 0) {
+            return 0;
         }
-        int total = 0;
-        for (int v : count.values()) total += v;
-        if (total == 0) return 0;
         double h = 0;
-        for (int v : count.values()) {
-            double p = (double) v / (double) total;
+        int kinds = 0;
+        for (int count : tagCount) {
+            if (count <= 0) {
+                continue;
+            }
+            kinds++;
+            double p = (double) count / (double) totalTagHits;
             h += -p * Math.log(p);
         }
-        double max = Math.log(count.size());
-        if (max <= 0) return 0;
+        if (kinds <= 1) {
+            return 0;
+        }
+        double max = Math.log(kinds);
+        if (max <= 0) {
+            return 0;
+        }
         return h / max;
     }
 
     int getCooldown(EventTag tag) {
-        return cooldowns.getOrDefault(tag, 0);
+        return cooldownByTag[tag.ordinal()];
     }
 
     double variance(StimulusAxis a) {
-        double m = mean.getOrDefault(a, 0.0);
-        double m2 = mean2.getOrDefault(a, 0.0);
+        int idx = a.ordinal();
+        double m = mean[idx];
+        double m2 = mean2[idx];
         double v = m2 - m * m;
-        if (v < 0) v = 0;
-        return v;
+        return v < 0 ? 0 : v;
     }
 
     double avgVariance() {
-        double s = 0;
-        int c = 0;
-        for (StimulusAxis a : StimulusAxis.values()) {
-            s += variance(a);
-            c++;
+        if (AXES.length == 0) {
+            return 0;
         }
-        if (c == 0) return 0;
-        return s / c;
+        double sum = 0;
+        for (int i = 0; i < AXES.length; i++) {
+            double m = mean[i];
+            double m2 = mean2[i];
+            double v = m2 - m * m;
+            if (v > 0) {
+                sum += v;
+            }
+        }
+        return sum / AXES.length;
     }
 
     double distanceFromMean(Stimulus s) {
+        if (DISTANCE_NORM <= 0) {
+            return 0;
+        }
         double d2 = 0;
-        for (StimulusAxis a : StimulusAxis.values()) {
-            double diff = s.get(a) - mean.getOrDefault(a, 0.0);
+        for (int i = 0; i < AXES.length; i++) {
+            double diff = s.get(AXES[i]) - mean[i];
             d2 += diff * diff;
         }
         double d = Math.sqrt(d2);
-        double norm = Math.sqrt(StimulusAxis.values().length);
-        if (norm <= 0) return 0;
-        return Math.min(1.0, d / norm);
+        return Math.min(1.0, d / DISTANCE_NORM);
     }
 }

@@ -2,6 +2,7 @@ package cc.sighs.more_maid_interaction.dsl;
 
 import cc.sighs.more_maid_interaction.dsl.runtime.ExecutionResult;
 import cc.sighs.more_maid_interaction.dsl.runtime.MaidscriptRuntime;
+import cc.sighs.more_maid_interaction.dsl.runtime.RuntimeCallable;
 import cc.sighs.more_maid_interaction.dsl.runtime.RuntimeInput;
 import cc.sighs.more_maid_interaction.dsl.runtime.RuntimeServices;
 import cc.sighs.more_maid_interaction.dsl.runtime.ScriptRuntimeException;
@@ -107,6 +108,65 @@ public class RuntimeTest {
         );
 
         Assertions.assertThrows(ScriptRuntimeException.class, () -> runtime.execute("builtin.player.chat_to_maid", input));
+    }
+
+    @Test
+    public void giftPayloadItemHelpersWork() {
+        String src = """
+                on_event "builtin.player.gift_flower" {
+                  if item.is("minecraft:diamond") {
+                    say("single")
+                  }
+                  if item.has("minecraft:poppy") {
+                    say("has_flower")
+                  }
+                }
+                """;
+
+        Map<String, Object> item = new HashMap<>();
+        item.put("id", "minecraft:diamond");
+        item.put("count", 2);
+        item.put("is", (RuntimeCallable) args -> "minecraft:diamond".equals(String.valueOf(args.get(0))));
+        item.put("has", (RuntimeCallable) args -> "minecraft:poppy".equals(String.valueOf(args.get(0))));
+
+        MaidscriptRuntime runtime = MaidscriptRuntime.fromSource(src);
+        RuntimeInput input = new RuntimeInput(
+                Map.of(),
+                Map.of(),
+                "CALM",
+                Map.of("CALM", 1.0),
+                Map.of(),
+                new RuntimeInput.EventData(
+                        "builtin.player.gift_flower",
+                        0.6,
+                        Map.of("item_id", "minecraft:diamond", "item_count", 2)
+                ),
+                Map.of("item", item),
+                RuntimeServices.NOOP,
+                3000
+        );
+
+        ExecutionResult result = runtime.execute("builtin.player.gift_flower", input);
+        Assertions.assertEquals(2, result.actions().size());
+        Assertions.assertEquals("single", result.actions().get(0).payload().get("text"));
+        Assertions.assertEquals("has_flower", result.actions().get(1).payload().get("text"));
+    }
+
+    @Test
+    public void reassignmentWorks() {
+        String src = """
+                on_event "builtin.player.gift_flower" {
+                  let gain = 1
+                  gain = gain + 2
+                  if gain == 3 {
+                    say("ok")
+                  }
+                }
+                """;
+
+        MaidscriptRuntime runtime = MaidscriptRuntime.fromSource(src);
+        ExecutionResult result = runtime.execute("builtin.player.gift_flower", RuntimeInput.empty("builtin.player.gift_flower"));
+        Assertions.assertEquals("ok", result.actions().get(0).payload().get("text"));
     }
 
     private static final class ToggleCooldownServices implements RuntimeServices {

@@ -102,6 +102,9 @@ public final class MaidscriptParser {
         if (check(TokenType.LBRACE)) {
             return parseBlockStmt();
         }
+        if (check(TokenType.IDENTIFIER) && checkNext(TokenType.ASSIGN)) {
+            return parseAssignStmt();
+        }
 
         Expr expr = parseExpression();
         if (check(TokenType.LBRACE) && supportsBlockArg(expr)) {
@@ -129,6 +132,14 @@ public final class MaidscriptParser {
         Expr initializer = parseExpression();
         optionalTerminator();
         return new LetStmt(name, initializer);
+    }
+
+    private Stmt parseAssignStmt() {
+        String name = consume(TokenType.IDENTIFIER, "Expected variable name.").lexeme();
+        consume(TokenType.ASSIGN, "Expected '=' after variable name.");
+        Expr value = parseExpression();
+        optionalTerminator();
+        return new AssignStmt(name, value);
     }
 
     private Stmt parseIfStmt() {
@@ -315,6 +326,12 @@ public final class MaidscriptParser {
     private boolean check(TokenType type) {
         if (isAtEnd()) return false;
         return peek().type() == type;
+    }
+
+    private boolean checkNext(TokenType type) {
+        if (isAtEnd()) return false;
+        if (current + 1 >= tokens.size()) return false;
+        return tokens.get(current + 1).type() == type;
     }
 
     private Token advance() {

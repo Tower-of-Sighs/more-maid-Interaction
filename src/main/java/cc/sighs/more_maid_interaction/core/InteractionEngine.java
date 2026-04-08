@@ -1,14 +1,12 @@
 package cc.sighs.more_maid_interaction.core;
 
-import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 public final class InteractionEngine {
+    private static final int STIMULUS_AXIS_COUNT = StimulusAxis.values().length;
     public record Result(Stats before, Stats after, double score, EmotionState emotion) {
     }
 
@@ -43,13 +41,17 @@ public final class InteractionEngine {
         Objects.requireNonNull(ctx);
         memory.tick();
         Stats before = stats;
-        double s = score(event, ctx);
+
+        double diversity = memory.diversity();
+        double s = score(event, ctx, diversity);
         Stats delta = deltaFromScore(event, s);
+
         stats = stats.add(delta);
-        stats = stats.withNovelty(Math.max(Stats.clamp(stats.novelty() * 0.92 + noveltyBoost(event) * 0.08), 0));
+        stats = stats.withNovelty(Math.max(Stats.clamp(stats.novelty() * 0.92 + noveltyBoost(event, diversity) * 0.08), 0));
         adjustSincerity(event);
         memory.push(event);
         ticks++;
+
         EmotionState e = emotion(stats);
         double varianceAvg = memory.avgVariance();
         double spam = spamIndex(event);
@@ -125,17 +127,17 @@ public final class InteractionEngine {
     }
 
     private double spamIndex(InteractionEvent e) {
-        int count = 0;
-        int limit = 6;
-        List<EventTag> l = new ArrayList<>(e.tags());
-        Set<EventTag> tags = l.isEmpty() ? EnumSet.noneOf(EventTag.class) : EnumSet.copyOf(l);
-        if (tags.isEmpty()) return 0;
-        for (EventTag t : tags) {
-            double f = memory.frequency(t);
-            if (f > 0.4) count++;
+        Set<EventTag> tags = e.tags();
+        if (tags.isEmpty()) {
+            return 0;
         }
-        double r = (double) count / Math.max(1, tags.size());
-        return Math.min(1, r);
+        int hit = 0;
+        for (EventTag t : tags) {
+            if (memory.frequency(t) > 0.4) {
+                hit++;
+            }
+        }
+        return Math.min(1.0, (double) hit / tags.size());
     }
 
     private Stats deltaFromScore(InteractionEvent e, double s) {
@@ -162,17 +164,16 @@ public final class InteractionEngine {
         return 0.5 + 0.5 * stats.sincerity();
     }
 
-    private double noveltyBoost(InteractionEvent e) {
-        double div = memory.diversity();
+    private double noveltyBoost(InteractionEvent e, double diversity) {
         double aff = Math.max(0, personality.affinity(e.tags()));
-        return 0.3 * div + 0.2 * aff + 0.5 * e.intensity();
+        return 0.3 * diversity + 0.2 * aff + 0.5 * e.intensity();
     }
 
-    private double score(InteractionEvent e, SocialContext ctx) {
+    private double score(InteractionEvent e, SocialContext ctx, double diversity) {
         double base = e.baseValence() * (0.7 + 0.3 * e.intensity());
         double aff = 1 + 0.6 * personality.affinity(e.tags());
         double rec = coolFactor(e);
-        double div = 0.8 + 0.4 * memory.diversity();
+        double div = 0.8 + 0.4 * diversity;
         double nov = 0.5 + 0.5 * stats.novelty();
         double syn = synergy(e);
         double stim = stimulusMatch(e);
@@ -197,8 +198,7 @@ public final class InteractionEngine {
         double p = stats.favor() * 0.5 + stats.bond() * 0.3 + stats.sincerity() * 0.2;
         double a = 0;
         for (EventTag t : e.tags()) {
-            double w = personality.weight(t);
-            a += w;
+            a += personality.weight(t);
         }
         a = a / Math.max(1, e.tags().size());
         return 0.8 + 0.4 * p + 0.2 * a;
@@ -216,28 +216,34 @@ public final class InteractionEngine {
     }
 
     private double stimulusMatch(InteractionEvent e) {
-        Stimulus sens = sensitivity();
-        double d = sens.dot(e.stimulus());
-        double max = StimulusAxis.values().length;
-        double norm = max <= 0 ? 0 : d / max;
-        return 0.8 + 0.4 * clamp01(norm);
-    }
+        Stimulus stimulus = e.stimulus();
 
-    private Stimulus sensitivity() {
-        Stimulus.Builder b = Stimulus.builder();
         double f = stats.favor();
         double g = stats.bond();
         double s = stats.sincerity();
         double n = stats.novelty();
-        b.put(StimulusAxis.CARE, clamp01(0.4 + 0.2 * (1 - g) + 0.2 * s));
-        b.put(StimulusAxis.AFFECTION, clamp01(0.3 + 0.3 * (1 - g) + 0.2 * f));
-        b.put(StimulusAxis.GIFT_VALUE, clamp01(0.2 + 0.2 * (1 - s) + 0.2 * n));
-        b.put(StimulusAxis.INTIMACY, clamp01(0.2 + 0.3 * (1 - g) + 0.3 * n));
-        b.put(StimulusAxis.PLAYFUL, clamp01(0.2 + 0.3 * n));
-        b.put(StimulusAxis.WORK_HELPFULNESS, clamp01(0.2 + 0.3 * s + 0.2 * g));
-        b.put(StimulusAxis.SOCIAL_EXPOSURE, clamp01(0.2 + 0.3 * n));
-        b.put(StimulusAxis.TEASE_INTENSITY, clamp01(0.1 + 0.2 * n - 0.3 * s));
-        return b.build();
+
+        double care = clamp01(0.4 + 0.2 * (1 - g) + 0.2 * s);
+        double affection = clamp01(0.3 + 0.3 * (1 - g) + 0.2 * f);
+        double gift = clamp01(0.2 + 0.2 * (1 - s) + 0.2 * n);
+        double intimacy = clamp01(0.2 + 0.3 * (1 - g) + 0.3 * n);
+        double playful = clamp01(0.2 + 0.3 * n);
+        double workHelp = clamp01(0.2 + 0.3 * s + 0.2 * g);
+        double social = clamp01(0.2 + 0.3 * n);
+        double tease = clamp01(0.1 + 0.2 * n - 0.3 * s);
+
+        double d = 0;
+        d += care * stimulus.get(StimulusAxis.CARE);
+        d += affection * stimulus.get(StimulusAxis.AFFECTION);
+        d += gift * stimulus.get(StimulusAxis.GIFT_VALUE);
+        d += intimacy * stimulus.get(StimulusAxis.INTIMACY);
+        d += playful * stimulus.get(StimulusAxis.PLAYFUL);
+        d += workHelp * stimulus.get(StimulusAxis.WORK_HELPFULNESS);
+        d += social * stimulus.get(StimulusAxis.SOCIAL_EXPOSURE);
+        d += tease * stimulus.get(StimulusAxis.TEASE_INTENSITY);
+
+        double norm = STIMULUS_AXIS_COUNT <= 0 ? 0 : d / STIMULUS_AXIS_COUNT;
+        return 0.8 + 0.4 * clamp01(norm);
     }
 
     private double jealousyIndex(SocialContext ctx) {

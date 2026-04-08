@@ -112,6 +112,22 @@ public final class ScriptMemoryStore {
         return true;
     }
 
+    public java.util.List<String> recentTags(int limit) {
+        if (limit <= 0 || entries.isEmpty()) {
+            return java.util.List.of();
+        }
+        int cap = Math.min(limit, entries.size());
+        java.util.ArrayList<String> out = new java.util.ArrayList<>(cap);
+        java.util.Iterator<MemoryEntry> it = entries.descendingIterator();
+        while (it.hasNext() && out.size() < cap) {
+            MemoryEntry entry = it.next();
+            if (entry != null && entry.tag != null && !entry.tag.isBlank()) {
+                out.add(entry.tag);
+            }
+        }
+        return java.util.List.copyOf(out);
+    }
+
     private record MemoryEntry(String tag, int tick) {
     }
 }

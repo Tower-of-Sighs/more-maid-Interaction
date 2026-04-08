@@ -1,0 +1,438 @@
+<body>
+<div class="panel-root">
+    <div class="panel-shell">
+        <div class="sticker st1">o</div>
+        <div class="sticker st2">*</div>
+        <div class="sticker st3">+</div>
+
+        <div class="header-row">
+            <translation id="panel-title" class="panel-title">ui.more_maid_interaction.title</translation>
+            <div id="maid-name" class="maid-name">-</div>
+        </div>
+
+        <div class="content-row">
+            <div class="left-column">
+                <translation class="left-title">ui.more_maid_interaction.event_list</translation>
+                <div id="event-list" class="event-list">
+                    <div id="event-knee-pillow" class="event-card"><translation class="event-label">event.more_maid_interaction.knee_pillow</translation></div>
+                    <div id="event-gift" class="event-card"><translation class="event-label">event.more_maid_interaction.gift</translation></div>
+                    <div id="event-headpat" class="event-card"><translation class="event-label">event.more_maid_interaction.headpat</translation></div>
+                    <div id="event-feed" class="event-card"><translation class="event-label">event.more_maid_interaction.feed</translation></div>
+                </div>
+            </div>
+
+            <div id="event-detail-column" class="right-column">
+                <translation id="preview-title" class="preview-title">ui.more_maid_interaction.preview_default_title</translation>
+                <translation id="preview-detail" class="preview-detail">ui.more_maid_interaction.preview_default_detail</translation>
+
+                <div id="event-actions" class="event-actions" style="display:none;">
+                    <div id="event-execute" class="event-btn event-btn-exec">
+                        <translation>ui.more_maid_interaction.event_execute</translation>
+                    </div>
+                </div>
+
+                <div id="gift-panel" class="gift-panel" style="display:none;">
+                    <translation class="gift-title">ui.more_maid_interaction.gift_panel_title</translation>
+                    <translation class="gift-tip">ui.more_maid_interaction.gift_drop_tip</translation>
+                    <div id="gift-counter" class="gift-counter"></div>
+
+                    <div class="gift-slots">
+                        <slot id="gift-slot-0" mode="virtual" interactive="false" cycle="0" render-bg="false" class="gift-slot" style="display:none;">{id:"minecraft:air",Count:1b}</slot>
+                        <slot id="gift-slot-1" mode="virtual" interactive="false" cycle="0" render-bg="false" class="gift-slot" style="display:none;">{id:"minecraft:air",Count:1b}</slot>
+                        <slot id="gift-slot-2" mode="virtual" interactive="false" cycle="0" render-bg="false" class="gift-slot" style="display:none;">{id:"minecraft:air",Count:1b}</slot>
+                        <slot id="gift-slot-3" mode="virtual" interactive="false" cycle="0" render-bg="false" class="gift-slot" style="display:none;">{id:"minecraft:air",Count:1b}</slot>
+                        <slot id="gift-slot-4" mode="virtual" interactive="false" cycle="0" render-bg="false" class="gift-slot" style="display:none;">{id:"minecraft:air",Count:1b}</slot>
+                        <slot id="gift-slot-5" mode="virtual" interactive="false" cycle="0" render-bg="false" class="gift-slot" style="display:none;">{id:"minecraft:air",Count:1b}</slot>
+                        <slot id="gift-slot-6" mode="virtual" interactive="false" cycle="0" render-bg="false" class="gift-slot" style="display:none;">{id:"minecraft:air",Count:1b}</slot>
+                        <slot id="gift-slot-7" mode="virtual" interactive="false" cycle="0" render-bg="false" class="gift-slot" style="display:none;">{id:"minecraft:air",Count:1b}</slot>
+                    </div>
+
+                    <div class="gift-meta-row">
+                        <div id="gift-items-hint" class="gift-items-hint"></div>
+                        <div id="gift-overflow" class="gift-overflow"></div>
+                    </div>
+
+                    <div class="gift-actions">
+                        <div id="gift-clear" class="gift-btn gift-btn-clear"><translation>ui.more_maid_interaction.gift_clear</translation></div>
+                        <div id="gift-execute" class="gift-btn gift-btn-exec"><translation>ui.more_maid_interaction.gift_execute</translation></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <translation id="action-tip" class="action-tip">ui.more_maid_interaction.tip</translation>
+    </div>
+</div>
+</body>
+
+<style>
+    @font-face {
+        font-family: "mmi_lxgw";
+        src: url("font/lxgw3500.ttf");
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: mmi_lxgw;
+    }
+
+    .panel-root {
+        width: 280px;
+        height: 190px;
+        padding: 6px;
+        box-sizing: border-box;
+        background-color: rgba(0, 0, 0, 0);
+    }
+
+    .panel-shell {
+        position: relative;
+        width: 268px;
+        height: 178px;
+        border-radius: 14px;
+        border: 2px solid #f9c6dd;
+        background: linear-gradient(160deg, #fff2f8 0%, #ffe9f2 48%, #ffe2ec 100%);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.55) inset;
+        box-sizing: border-box;
+        padding: 8px 10px 9px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .header-row {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        height: 18px;
+    }
+
+    .panel-title {
+        max-width: 128px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 15px;
+        font-weight: bold;
+        color: #b74e80;
+    }
+
+    .maid-name {
+        max-width: 116px;
+        text-align: right;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 12px;
+        font-weight: bold;
+        color: #8e3f66;
+    }
+
+    .content-row {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .left-column {
+        width: 126px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .left-title {
+        height: 12px;
+        line-height: 12px;
+        font-size: 9px;
+        color: #9d4d72;
+        font-weight: bold;
+        margin-bottom: 4px;
+    }
+
+    .event-list {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .event-card {
+        width: 122px;
+        min-height: 20px;
+        height: 20px;
+        line-height: 20px;
+        border-radius: 10px;
+        border: 1px solid #f2aacd;
+        background: linear-gradient(180deg, #fff9fc 0%, #ffeef6 100%);
+        text-align: center;
+        transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
+    }
+
+    .event-label {
+        display: block;
+        width: 118px;
+        margin: 0 auto;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 11px;
+        font-weight: bold;
+        color: #91385f;
+    }
+
+    .event-card:hover {
+        transform: translateY(-1px);
+        border-color: #e47eb0;
+        background: linear-gradient(180deg, #fff6fb 0%, #ffdbea 100%);
+    }
+
+    .event-card.active {
+        border-color: #d96a9f;
+        background: linear-gradient(180deg, #ffdff0 0%, #ffcde4 100%);
+        box-shadow: 0 0 0 1px rgba(217, 106, 159, 0.3) inset;
+    }
+
+    .event-card:active {
+        transform: translateY(0);
+    }
+
+    .right-column {
+        width: 112px;
+        display: flex;
+        flex-direction: column;
+        border-radius: 10px;
+        border: 1px solid #f4b8d6;
+        background: linear-gradient(180deg, #fffafc 0%, #fff1f7 100%);
+        box-sizing: border-box;
+        padding: 6px;
+        opacity: 0;
+        transform: translateX(10px);
+        pointer-events: none;
+        transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+
+    .right-column.open {
+        opacity: 1;
+        transform: translateX(0px);
+        pointer-events: auto;
+    }
+
+    .preview-title {
+        height: 11px;
+        line-height: 11px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 11px;
+        font-weight: bold;
+        color: #a64874;
+    }
+
+    .preview-detail {
+        min-height: 20px;
+        max-height: 20px;
+        margin-top: 2px;
+        overflow: hidden;
+        font-size: 8px;
+        line-height: 10px;
+        color: #7f4a64;
+    }
+
+    .event-actions {
+        margin-top: auto;
+        height: 14px;
+    }
+
+    .event-btn {
+        width: 100%;
+        height: 14px;
+        line-height: 14px;
+        text-align: center;
+        border-radius: 7px;
+        font-size: 8px;
+        border: 1px solid #df9fc2;
+        color: #813e5c;
+        background: linear-gradient(180deg, #fff7fb 0%, #ffe8f3 100%);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .event-btn-exec {
+        border-color: #d873a3;
+        background: linear-gradient(180deg, #ffdff0 0%, #ffcde4 100%);
+        color: #7d2f53;
+        font-weight: bold;
+    }
+
+    .event-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .gift-panel {
+        margin-top: 2px;
+        border-radius: 8px;
+        border: 1px solid #efb3d1;
+        background: rgba(255, 255, 255, 0.62);
+        box-sizing: border-box;
+        padding: 3px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .gift-title {
+        height: 8px;
+        line-height: 8px;
+        font-size: 8px;
+        color: #a94f74;
+        font-weight: bold;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .gift-tip {
+        height: 7px;
+        line-height: 7px;
+        font-size: 7px;
+        color: #885063;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .gift-counter {
+        height: 7px;
+        line-height: 7px;
+        font-size: 7px;
+        color: #7a445c;
+        text-align: right;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .gift-slots {
+        width: 100%;
+        min-height: 34px;
+        max-height: 34px;
+        border-radius: 6px;
+        border: 1px dashed #d982b0;
+        background: rgba(255, 241, 248, 0.9);
+        box-sizing: border-box;
+        padding: 2px;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        gap: 2px;
+        overflow: hidden;
+    }
+
+    .gift-slot {
+        width: 14px;
+        height: 14px;
+        flex: 0 0 14px;
+        --aui-slot-size: 14;
+        --aui-slot-render-bg: false;
+        --aui-slot-padding: 0;
+        --aui-slot-icon-scale: 0.92;
+        background-image: unset;
+        border: none;
+    }
+
+    .gift-meta-row {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 2px;
+        height: 8px;
+    }
+
+    .gift-items-hint {
+        flex: 1;
+        min-width: 0;
+        height: 8px;
+        line-height: 8px;
+        font-size: 7px;
+        color: #8a5067;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .gift-overflow {
+        width: 18px;
+        height: 8px;
+        line-height: 8px;
+        font-size: 7px;
+        color: #7a445c;
+        font-weight: bold;
+        text-align: right;
+    }
+
+    .gift-actions {
+        height: 12px;
+        display: flex;
+        flex-direction: row;
+        gap: 2px;
+    }
+
+    .gift-btn {
+        flex: 1;
+        height: 12px;
+        line-height: 12px;
+        text-align: center;
+        border-radius: 6px;
+        font-size: 7px;
+        border: 1px solid #df9fc2;
+        color: #813e5c;
+        background: linear-gradient(180deg, #fff7fb 0%, #ffe8f3 100%);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .gift-btn-exec {
+        border-color: #d873a3;
+        background: linear-gradient(180deg, #ffdff0 0%, #ffcde4 100%);
+        color: #7d2f53;
+        font-weight: bold;
+    }
+
+    .gift-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .action-tip {
+        height: 16px;
+        border-radius: 8px;
+        text-align: center;
+        line-height: 16px;
+        font-size: 9px;
+        color: #954969;
+        background-color: rgba(255, 255, 255, 0.55);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .sticker {
+        position: absolute;
+        font-size: 10px;
+        color: #e890b8;
+    }
+
+    .st1 { right: 74px; top: 12px; }
+    .st2 { right: 57px; top: 20px; }
+    .st3 { left: 96px; top: 16px; }
+</style>

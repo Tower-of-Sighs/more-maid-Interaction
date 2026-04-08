@@ -1,0 +1,51 @@
+{
+  "key.categories.more_maid_interaction": "更多女仆互动",
+  "key.more_maid_interaction.open_interaction": "打开女仆互动面板",
+
+  "ui.more_maid_interaction.title": "女仆互动",
+  "ui.more_maid_interaction.tip": "先左键点击事件；送礼模式下右键投放，再点执行。",
+  "ui.more_maid_interaction.preview_default_title": "选择互动事件",
+  "ui.more_maid_interaction.preview_default_detail": "点击左侧事件卡片后，右侧会展开详情与操作。",
+  "ui.more_maid_interaction.event_list": "事件列表",
+  "ui.more_maid_interaction.event_execute": "执行事件",
+
+  "ui.more_maid_interaction.gift_panel_title": "送礼篮",
+  "ui.more_maid_interaction.gift_drop_tip": "主手拿物品后，对下方区域右键放入；Shift+右键放整组。",
+  "ui.more_maid_interaction.gift_drop_zone": "右键放入主手物品",
+  "ui.more_maid_interaction.gift_empty": "暂无礼物",
+  "ui.more_maid_interaction.gift_counter": "数量 %s / 种类 %s（上限 %s / %s）",
+  "ui.more_maid_interaction.gift_clear": "清空",
+  "ui.more_maid_interaction.gift_execute": "执行送礼",
+
+  "event.more_maid_interaction.knee_pillow": "膝枕",
+  "event.more_maid_interaction.gift": "送礼",
+  "event.more_maid_interaction.headpat": "摸头",
+  "event.more_maid_interaction.feed": "投喂",
+
+  "event_detail.more_maid_interaction.knee_pillow": "亲密安抚事件。后续将接入更细的情绪曲线与剧情分支。",
+  "event_detail.more_maid_interaction.gift": "送礼事件：先右键放入物品，再点击执行。会把礼物数据传给 Maidscript。",
+  "event_detail.more_maid_interaction.headpat": "轻度正反馈事件，适合日常维护关系值。",
+  "event_detail.more_maid_interaction.feed": "照顾型事件。后续将与饥饿状态、时间段和偏好记忆联动。",
+
+  "message.more_maid_interaction.aim_maid": "请先将准星对准女仆。",
+  "message.more_maid_interaction.panel_closed": "已关闭互动面板。",
+  "message.more_maid_interaction.opened": "已打开女仆互动面板。",
+  "message.more_maid_interaction.ui_missing": "互动面板资源加载失败，请检查 AUI 资源路径。",
+  "message.more_maid_interaction.interaction_selected": "已选择事件：%s",
+  "message.more_maid_interaction.event_sent": "已触发 %s -> %s（当前为事件壳阶段）",
+  "message.more_maid_interaction.too_far": "距离女仆过远，事件触发失败。",
+  "message.more_maid_interaction.not_owner": "该女仆不属于你，无法触发该事件。",
+
+  "message.more_maid_interaction.gift_no_item": "主手没有可放入的物品。",
+  "message.more_maid_interaction.gift_added": "已加入礼物：%s x%s",
+  "message.more_maid_interaction.gift_cleared": "已清空礼物栏。",
+  "message.more_maid_interaction.gift_empty": "礼物栏为空，请先放入物品。",
+  "message.more_maid_interaction.gift_execute_sent": "已发送送礼请求。",
+  "message.more_maid_interaction.gift_execute_ok": "已成功送出 %s 个物品给 %s。",
+  "message.more_maid_interaction.gift_execute_failed": "送礼失败：没有可交付物品或女仆背包已满。",
+  "message.more_maid_interaction.gift_total_limit": "礼物总数量达到上限。",
+  "message.more_maid_interaction.gift_distinct_limit": "礼物种类达到上限。",
+  "message.more_maid_interaction.gift_not_enough": "库存中同类物品不足，无法继续加入。",
+  "message.more_maid_interaction.select_event_first": "请先选择一个事件。",
+  "message.more_maid_interaction.maid_line": "%s：%s"
+}

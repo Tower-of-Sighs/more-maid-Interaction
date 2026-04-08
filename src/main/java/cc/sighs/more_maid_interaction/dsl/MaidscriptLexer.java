@@ -157,8 +157,8 @@ public final class MaidscriptLexer {
     private void number() {
         while (isDigit(peek())) advance();
         if (peek() == '.' && isDigit(peekNext())) {
-            advance();
-            while (isDigit(peek())) advance();
+            do advance();
+            while (isDigit(peek()));
         }
         String text = source.substring(start, current);
         tokens.add(new Token(TokenType.NUMBER, text, Double.parseDouble(text), tokenLine, tokenColumn));
